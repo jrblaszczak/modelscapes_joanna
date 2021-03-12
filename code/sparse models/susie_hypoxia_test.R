@@ -8,12 +8,16 @@ df <- fread("../../data/GRDO_GEE_HA_NHD_2021_01_30.csv")
 colnames(df)
 
 ## Create data needed for susie function: https://stephenslab.github.io/susieR/reference/susie.html
-X <- subset(df, select = c(slope_calc:NHD_PctHbWet2011Ws, DO_mgL_mean))
+X <- subset(df, select = c(slope_calc:NHD_PctHbWet2011Ws, Hyp_pr_sub2))
 X <- X %>% select_if(is.numeric)
+X[mapply(is.infinite, X)] <- NA
 X <- na.omit(X)
 
-y <- X$DO_mgL_mean
-X$DO_mgL_mean <- NULL
+## standardize
+X_std <- as.data.frame(apply(X, 2, function(y) (y - mean(y))/sd(y)))
+
+y <- X_std$Hyp_pr_sub2
+X_std$Hyp_pr_sub2 <- NULL
 
 ## Run susie
 res <- susie(X, y, L=10)
